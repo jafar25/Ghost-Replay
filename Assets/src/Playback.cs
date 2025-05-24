@@ -1,9 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Playback : MonoBehaviour
 {
+    [SerializeField]
     public Transform Ghost;
+    [SerializeField]
+    public UnityEvent OnPlaybackStarted;
+    [SerializeField]
+    public UnityEvent OnPlaybackCompleted;
+
+    [SerializeField]
+    public bool disableOnCompletion = false;
+
     private bool isPlaying = false;
     private float playbackTime = 0f;
     private List<TransformSnapshot> TransformData;
@@ -38,7 +49,7 @@ public class Playback : MonoBehaviour
         else
         {
             // Stop playback after the end is reached
-            isPlaying = false;
+            this.StopPlayback();
         }
     }
 
@@ -48,6 +59,13 @@ public class Playback : MonoBehaviour
         {
             Debug.LogError("No recorded data to play back");
             return;
+        }
+
+        OnPlaybackStarted?.Invoke();
+
+        if (disableOnCompletion && !Ghost.gameObject.activeSelf)
+        {
+            Ghost.gameObject.SetActive(true);
         }
 
         isPlaying = true;
@@ -60,6 +78,11 @@ public class Playback : MonoBehaviour
     public void StopPlayback()
     {
         isPlaying = false;
+        OnPlaybackCompleted?.Invoke();
+        if (disableOnCompletion)
+        {
+            Ghost.gameObject.SetActive(false);
+        }
     }
 
     public void LoadFile(string fileName)
